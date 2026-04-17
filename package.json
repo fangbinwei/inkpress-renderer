@@ -1,0 +1,29 @@
+{
+  "name": "inkpress-renderer",
+  "version": "0.1.0",
+  "description": "Render Obsidian vault folders into a static HTML site",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "unified": "^11.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-gfm": "^4.0.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-rehype": "^11.0.0",
+    "rehype-stringify": "^10.0.0",
+    "yaml": "^2.4.0",
+    "shiki": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
