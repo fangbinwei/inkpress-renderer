@@ -7,12 +7,16 @@
  *   ACCESS_KEY_ID, ACCESS_KEY_SECRET
  */
 
+import 'dotenv/config'
 import { renderSite, DefaultTheme } from '../../src/index.js'
 import { createNodeAdapter, TEST_VAULT_PATH } from '../helpers/mock-fs.js'
-import { writeFileSync, mkdirSync, rmSync, readdirSync, statSync } from 'fs'
+import { writeFileSync, mkdirSync, rmSync, readdirSync } from 'fs'
 import { join, dirname } from 'path'
-import { readFileSync } from 'fs'
+import { config } from 'dotenv'
 import OSS from 'ali-oss'
+
+// Load .env.local (dotenv/config only loads .env by default)
+config({ path: join(dirname(new URL(import.meta.url).pathname), '../../.env.local') })
 
 // --- Config ---
 const OSS_PREFIX = '_inkpress-e2e-test/'
@@ -20,29 +24,12 @@ const BUCKET = 'fangbinwei-blog'
 const REGION = 'oss-cn-shanghai'
 const ENDPOINT = 'oss-cn-shanghai.aliyuncs.com'
 
-// Load credentials
 function loadCredentials(): { accessKeyId: string; accessKeySecret: string } {
-  if (process.env.ACCESS_KEY_ID && process.env.ACCESS_KEY_SECRET) {
-    return { accessKeyId: process.env.ACCESS_KEY_ID, accessKeySecret: process.env.ACCESS_KEY_SECRET }
+  const { ACCESS_KEY_ID, ACCESS_KEY_SECRET } = process.env
+  if (!ACCESS_KEY_ID || !ACCESS_KEY_SECRET) {
+    throw new Error('No OSS credentials found. Create .env.local with ACCESS_KEY_ID and ACCESS_KEY_SECRET, or set env vars.')
   }
-  // Try loading from local .env.local (project root)
-  const candidates = [
-    join(dirname(new URL(import.meta.url).pathname), '../../.env.local'),
-  ]
-  for (const envPath of candidates) {
-    try {
-      const content = readFileSync(envPath, 'utf-8')
-      const vars: Record<string, string> = {}
-      for (const line of content.split('\n')) {
-        const match = line.match(/^(\w+)\s*=\s*(.+)$/)
-        if (match) vars[match[1]] = match[2].trim()
-      }
-      if (vars.ACCESS_KEY_ID && vars.ACCESS_KEY_SECRET) {
-        return { accessKeyId: vars.ACCESS_KEY_ID, accessKeySecret: vars.ACCESS_KEY_SECRET }
-      }
-    } catch {}
-  }
-  throw new Error('No OSS credentials found. Create .env.local with ACCESS_KEY_ID and ACCESS_KEY_SECRET, or set env vars.')
+  return { accessKeyId: ACCESS_KEY_ID, accessKeySecret: ACCESS_KEY_SECRET }
 }
 
 // --- Helpers ---
