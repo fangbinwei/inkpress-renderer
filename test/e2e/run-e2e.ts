@@ -25,19 +25,24 @@ function loadCredentials(): { accessKeyId: string; accessKeySecret: string } {
   if (process.env.ACCESS_KEY_ID && process.env.ACCESS_KEY_SECRET) {
     return { accessKeyId: process.env.ACCESS_KEY_ID, accessKeySecret: process.env.ACCESS_KEY_SECRET }
   }
-  // Try loading from aliyun-oss-website-action .env.local
-  try {
-    const envPath = join(dirname(new URL(import.meta.url).pathname), '../../../../goProject/aliyun-oss-website-action/.env.local')
-    const content = readFileSync(envPath, 'utf-8')
-    const vars: Record<string, string> = {}
-    for (const line of content.split('\n')) {
-      const match = line.match(/^(\w+)\s*=\s*(.+)$/)
-      if (match) vars[match[1]] = match[2].trim()
-    }
-    return { accessKeyId: vars.ACCESS_KEY_ID, accessKeySecret: vars.ACCESS_KEY_SECRET }
-  } catch {
-    throw new Error('No OSS credentials found. Set ACCESS_KEY_ID and ACCESS_KEY_SECRET env vars.')
+  // Try loading from local .env.local (project root)
+  const candidates = [
+    join(dirname(new URL(import.meta.url).pathname), '../../.env.local'),
+  ]
+  for (const envPath of candidates) {
+    try {
+      const content = readFileSync(envPath, 'utf-8')
+      const vars: Record<string, string> = {}
+      for (const line of content.split('\n')) {
+        const match = line.match(/^(\w+)\s*=\s*(.+)$/)
+        if (match) vars[match[1]] = match[2].trim()
+      }
+      if (vars.ACCESS_KEY_ID && vars.ACCESS_KEY_SECRET) {
+        return { accessKeyId: vars.ACCESS_KEY_ID, accessKeySecret: vars.ACCESS_KEY_SECRET }
+      }
+    } catch {}
   }
+  throw new Error('No OSS credentials found. Create .env.local with ACCESS_KEY_ID and ACCESS_KEY_SECRET, or set env vars.')
 }
 
 // --- Helpers ---
