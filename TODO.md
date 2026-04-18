@@ -9,6 +9,7 @@ Tracking outstanding items across the Inkpress project.
 - [ ] Delete failure visibility: add `deleteErrors` to `FullPublishReport` and display in report modal
 - [ ] `siteName` should be configurable via `RenderOptions`, not hardcoded as "Inkpress Site"
 - [ ] Nav links use absolute paths (`/`) which break with OSS prefix — switch to relative paths
+- [ ] `site.json` — currently generated and uploaded but no code consumes it; decide: make opt-in via `RenderOptions.includeSiteIndex` OR strip sensitive frontmatter fields (source/author/etc.) before writing, since frontmatter leaks even in `html`-only mode
 - [ ] Submit to Obsidian community plugin marketplace (after BRAT testing)
 
 ## P2 — Future enhancements
