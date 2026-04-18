@@ -18,6 +18,7 @@ export interface RenderOptions {
   deadLinkPolicy: 'silent' | 'marked'
   fs: FileSystemAdapter
   onProgress?: (phase: 'render', current: number, total: number) => void
+  signal?: AbortSignal
 }
 
 export interface RenderResult {
@@ -47,10 +48,18 @@ export interface FileSkipEntry {
   reason: string
 }
 
+export type DeadLinkReason =
+  | 'target-missing'       // No file with this name exists anywhere in the vault
+  | 'not-published'        // File exists in vault but not in any publishDir
+  | 'unsupported-asset'    // File exists but renderer does not render it (e.g. .excalidraw, .canvas)
+  | 'ambiguous'            // Multiple files match and short-name lookup is not unique
+
 export interface DeadLinkEntry {
   sourcePath: string
   targetLink: string
   line: number
+  reason: DeadLinkReason
+  hint: string
 }
 
 export interface MissingImageEntry {

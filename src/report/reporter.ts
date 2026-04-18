@@ -9,7 +9,7 @@ export class Reporter {
 
   rendered(): void { this._rendered++ }
   skipped(path: string, reason: string): void { this._skipped.push({ path, reason }) }
-  deadLink(sourcePath: string, targetLink: string, line: number): void { this._deadLinks.push({ sourcePath, targetLink, line }) }
+  deadLink(entry: DeadLinkEntry): void { this._deadLinks.push(entry) }
   missingImage(sourcePath: string, imagePath: string, line: number): void { this._missingImages.push({ sourcePath, imagePath, line }) }
   warn(message: string): void { this._warnings.push(message) }
 

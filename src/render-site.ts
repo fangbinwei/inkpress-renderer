@@ -5,7 +5,7 @@ import type {
 import { parseFrontmatter } from './parser/frontmatter.js'
 import { parseWikilinks } from './parser/wikilink.js'
 import { renderPage } from './generator/html-renderer.js'
-import { createLinkResolver } from './resolver/link-resolver.js'
+import { createLinkResolver, type VaultFileIndex } from './resolver/link-resolver.js'
 import { resolveImagePath } from './resolver/image-resolver.js'
 import { AssetCollector } from './resolver/asset-collector.js'
 import { buildBreadcrumb } from './site/breadcrumb.js'
@@ -49,7 +49,7 @@ function extractTitle(frontmatter: Record<string, unknown>, content: string, sou
 }
 
 export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
-  const { publishDirs, theme, uploadMode, deadLinkPolicy, fs, onProgress } = opts
+  const { publishDirs, theme, uploadMode, deadLinkPolicy, fs, onProgress, signal } = opts
   const reporter = new Reporter()
   const assetCollector = new AssetCollector()
   const outputFiles: OutputFile[] = []
@@ -122,15 +122,20 @@ export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
     }
   }
 
-  // 6. Create link resolver
-  const linkResolver = createLinkResolver(publishedPages)
+  // 6. Build vault-wide file index so link resolver can classify dead links
+  const vaultIndex = await buildVaultFileIndex(fs, publishedPages)
 
-  // 7. Render each page
+  // 7. Create link resolver
+  const linkResolver = createLinkResolver(publishedPages, vaultIndex)
+
+  // 8. Render each page
   const parsedPages: ParsedPage[] = []
   const resolvedOutlinks = new Map<string, string[]>()
   const total = parsedInputs.length
 
   for (let i = 0; i < parsedInputs.length; i++) {
+    if (signal?.aborted) break
+
     const input = parsedInputs[i]
     const htmlPath = input.sourcePath.replace(/\.md$/, '.html')
 
@@ -138,8 +143,7 @@ export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
       markdown: input.content,
       sourcePath: input.sourcePath,
       resolveLink: (target: string) => {
-        const rawLink: RawLink = { type: 'wikilink', target, isEmbed: false, line: 0 }
-        return linkResolver.resolve(rawLink, input.sourcePath)
+        return linkResolver.lookup(target, input.sourcePath)
       },
       resolveImage: (target: string) => {
         // Try to find the asset
@@ -182,9 +186,9 @@ export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
     reporter.rendered()
   }
 
-  // 8. Collect dead links from link resolver
+  // 9. Collect dead links from link resolver
   for (const dl of linkResolver.getDeadLinks()) {
-    reporter.deadLink(dl.sourcePath, dl.targetLink, dl.line)
+    reporter.deadLink(dl)
   }
 
   // 9. Build site index
@@ -262,4 +266,42 @@ export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
   }
 
   return { files: outputFiles, report: reporter.build() }
+}
+
+async function buildVaultFileIndex(
+  fs: import('./types.js').FileSystemAdapter,
+  publishedPages: Map<string, string>,
+): Promise<VaultFileIndex> {
+  const unpublishedMd = new Set<string>()
+  const unpublishedMdByBasename = new Map<string, string[]>()
+  const assets = new Set<string>()
+  const assetsByBasename = new Map<string, string[]>()
+
+  let allFiles: string[] = []
+  try {
+    allFiles = await fs.listFiles('')
+  } catch {
+    // Vault root not listable — return empty index (resolver still works, just with limited hints)
+    return { unpublishedMd, unpublishedMdByBasename, assets, assetsByBasename }
+  }
+
+  for (const path of allFiles) {
+    if (path.endsWith('.md')) {
+      const nameNoExt = path.replace(/\.md$/, '')
+      if (publishedPages.has(nameNoExt)) continue
+      unpublishedMd.add(nameNoExt)
+      const base = posix.basename(nameNoExt)
+      const list = unpublishedMdByBasename.get(base) || []
+      list.push(nameNoExt)
+      unpublishedMdByBasename.set(base, list)
+    } else {
+      assets.add(path)
+      const base = posix.basename(path)
+      const list = assetsByBasename.get(base) || []
+      list.push(path)
+      assetsByBasename.set(base, list)
+    }
+  }
+
+  return { unpublishedMd, unpublishedMdByBasename, assets, assetsByBasename }
 }

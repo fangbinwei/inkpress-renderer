@@ -15,8 +15,8 @@ describe('Reporter', () => {
   })
   it('collects dead links', () => {
     const reporter = new Reporter()
-    reporter.deadLink('notes/a.md', 'missing', 5)
-    expect(reporter.build().deadLinks).toEqual([{ sourcePath: 'notes/a.md', targetLink: 'missing', line: 5 }])
+    reporter.deadLink({ sourcePath: 'notes/a.md', targetLink: 'missing', line: 5, reason: 'target-missing', hint: 'not found' })
+    expect(reporter.build().deadLinks).toEqual([{ sourcePath: 'notes/a.md', targetLink: 'missing', line: 5, reason: 'target-missing', hint: 'not found' }])
   })
   it('collects missing images', () => {
     const reporter = new Reporter()

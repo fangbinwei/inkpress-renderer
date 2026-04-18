@@ -3,3 +3,4 @@ dist/
 *.tgz
 .env*
 .e2e-output/
+.DS_Store
