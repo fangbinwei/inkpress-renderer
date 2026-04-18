@@ -81,4 +81,83 @@ describe('renderSite (integration)', () => {
     const cssFile = result.files.find(f => f.relativePath.endsWith('.css'))!
     expect(cssFile.cacheControl).toBe('max-age=2592000')
   })
+
+  it('produces a complete themed HTML page with content, heading ids, and navigation', async () => {
+    const result = await renderSite({
+      vaultPath: TEST_VAULT_PATH,
+      publishDirs: ['notes', 'guides'],
+      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+    })
+
+    const page = result.files.find(f => f.relativePath === 'notes/normal.html')!
+    const html = page.content as string
+
+    // 1. Complete page structure
+    expect(html).toContain('<!DOCTYPE html>')
+    expect(html).toContain('<html')
+    expect(html).toContain('</html>')
+    expect(html).toContain('<head>')
+    expect(html).toContain('<body>')
+
+    // 2. Markdown content rendered
+    expect(html).toContain('<strong>bold</strong>')
+    expect(html).toContain('<em>italic</em>')
+    expect(html).toContain('<code>inline code</code>')
+    expect(html).toContain('<blockquote>')
+    expect(html).toContain('<table>')
+
+    // 3. Heading has id
+    expect(html).toMatch(/<h1 id="normal-note">Normal Note<\/h1>/)
+
+    // 4. Theme elements present
+    expect(html).toContain('class="nav-tree"')       // sidebar nav
+    expect(html).toContain('class="breadcrumb"')      // breadcrumb
+    expect(html).toContain('class="theme-toggle"')    // dark mode toggle
+    expect(html).toContain('class="sidebar"')         // sidebar container
+    expect(html).toContain('class="content"')         // content area
+    expect(html).toContain('<title>Normal Note</title>') // page title in <head>
+  })
+
+  it('stops rendering when signal is aborted before start', async () => {
+    const controller = new AbortController()
+    controller.abort() // pre-abort
+
+    const result = await renderSite({
+      vaultPath: TEST_VAULT_PATH,
+      publishDirs: ['notes', 'guides'],
+      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+      signal: controller.signal,
+    })
+
+    // No pages rendered, but index.html + theme assets + site.json are still produced
+    // (they come after the render loop)
+    expect(result.report.rendered).toBe(0)
+    const pageHtmlFiles = result.files.filter(
+      f => f.relativePath.endsWith('.html') && f.relativePath !== 'index.html'
+    )
+    expect(pageHtmlFiles).toHaveLength(0)
+  })
+
+  it('stops rendering mid-way when signal is aborted via onProgress', async () => {
+    const controller = new AbortController()
+
+    const result = await renderSite({
+      vaultPath: TEST_VAULT_PATH,
+      publishDirs: ['notes', 'guides'],
+      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+      signal: controller.signal,
+      onProgress: (_phase, current, _total) => {
+        // Abort after first page renders
+        if (current === 1) controller.abort()
+      },
+    })
+
+    // Only 1 page rendered (the one that triggered the abort via progress callback)
+    // because abort is checked at the TOP of the next iteration
+    expect(result.report.rendered).toBe(1)
+    const pageHtmlFiles = result.files.filter(
+      f => f.relativePath.endsWith('.html') && f.relativePath !== 'index.html'
+    )
+    expect(pageHtmlFiles).toHaveLength(1)
+  })
 })

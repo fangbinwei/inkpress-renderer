@@ -1,4 +1,5 @@
 import { parseMarkdown } from '../parser/markdown.js'
+import { highlightCode } from './highlight.js'
 import type { HeadingMeta } from '../types.js'
 import type { ResolveResult } from '../resolver/link-resolver.js'
 
@@ -20,8 +21,10 @@ interface RenderPageResult {
 
 export async function renderPage(opts: RenderPageOptions): Promise<RenderPageResult> {
   const processedMd = substituteWikilinks(opts)
-  const html = await parseMarkdown(processedMd)
+  let html = await parseMarkdown(processedMd)
+  html = await highlightCodeBlocks(html)
   const headings = extractHeadings(html)
+  html = addHeadingIds(html, headings)
   return { html, headings }
 }
 
@@ -59,11 +62,16 @@ function substituteWikilinks(opts: RenderPageOptions): string {
 
 function extractHeadings(html: string): HeadingMeta[] {
   const headings: HeadingMeta[] = []
+  const slugCounts = new Map<string, number>()
   const headingRe = /<h([1-6])>(.*?)<\/h\1>/g
   let match
   while ((match = headingRe.exec(html)) !== null) {
     const text = match[2].replace(/<[^>]+>/g, '')
-    headings.push({ level: parseInt(match[1], 10), text, slug: slugify(text) })
+    let slug = slugify(text)
+    const count = slugCounts.get(slug) || 0
+    slugCounts.set(slug, count + 1)
+    if (count > 0) slug = `${slug}-${count}`
+    headings.push({ level: parseInt(match[1], 10), text, slug })
   }
   return headings
 }
@@ -78,4 +86,34 @@ function addHeadingIds(html: string, headings: HeadingMeta[]): string {
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
+}
+
+// Post-process: replace <pre><code class="language-xxx">...</code></pre> with shiki output
+const CODE_HTML_RE = /<pre><code class="language-([\w+#.-]+)">([\s\S]*?)<\/code><\/pre>/g
+
+async function highlightCodeBlocks(html: string): Promise<string> {
+  const matches: { full: string; lang: string; code: string }[] = []
+  let m: RegExpExecArray | null
+  CODE_HTML_RE.lastIndex = 0
+  while ((m = CODE_HTML_RE.exec(html)) !== null) {
+    matches.push({ full: m[0], lang: m[1], code: unescapeHtml(m[2]) })
+  }
+
+  for (const { full, lang, code } of matches) {
+    const highlighted = await highlightCode(code, lang)
+    html = html.replace(full, highlighted)
+  }
+
+  return html
+}
+
+function unescapeHtml(str: string): string {
+  return str
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
 }
