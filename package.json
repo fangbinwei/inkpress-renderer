@@ -2,6 +2,19 @@
   "name": "inkpress-renderer",
   "version": "0.1.0",
   "description": "Render Obsidian vault folders into a static HTML site",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fangbinwei/inkpress-renderer.git"
+  },
+  "homepage": "https://github.com/fangbinwei/inkpress-renderer",
+  "bugs": {
+    "url": "https://github.com/fangbinwei/inkpress-renderer/issues"
+  },
+  "keywords": ["obsidian", "markdown", "static-site", "renderer", "html"],
+  "author": "fangbinwei",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
