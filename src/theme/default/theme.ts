@@ -10,11 +10,13 @@ import { CSS, JS } from './styles.js'
 
 const CSS_PATH = '_assets/inkpress/style.css'
 const JS_PATH = '_assets/inkpress/script.js'
+const BASE_URL = ''
 
 export class DefaultTheme implements Theme {
   name = 'default'
 
   renderPage(ctx: PageContext): string {
+    const groupName = deriveGroupName(ctx.currentPath, ctx.breadcrumb)
     return renderPageLayout({
       title: ctx.title,
       htmlContent: ctx.htmlContent,
@@ -22,8 +24,18 @@ export class DefaultTheme implements Theme {
       navTree: ctx.navTree,
       currentPath: ctx.currentPath,
       siteName: ctx.siteConfig.siteName || 'Inkpress Site',
+      variant: ctx.siteConfig.variant,
       cssPath: CSS_PATH,
       jsPath: JS_PATH,
+      baseUrl: BASE_URL,
+      headings: ctx.headings,
+      pageIndex: ctx.pageIndex,
+      totalPages: ctx.totalPages,
+      modified: ctx.modified,
+      groupName: ctx.groupName || groupName,
+      readingTime: ctx.readingTime,
+      wordCount: ctx.wordCount,
+      backlinks: ctx.backlinks,
     })
   }
 
@@ -31,8 +43,10 @@ export class DefaultTheme implements Theme {
     return renderIndexPage({
       navTree: ctx.navTree,
       siteName: ctx.siteConfig.siteName || 'Inkpress Site',
+      variant: ctx.siteConfig.variant,
       cssPath: CSS_PATH,
       jsPath: JS_PATH,
+      baseUrl: BASE_URL,
     })
   }
 
@@ -52,4 +66,16 @@ export class DefaultTheme implements Theme {
       },
     ]
   }
+}
+
+function deriveGroupName(
+  currentPath: string,
+  breadcrumb: PageContext['breadcrumb'],
+): string {
+  const fromBc =
+    breadcrumb.find(b => b.path === null && b.name) ??
+    breadcrumb.find(b => b.path !== null)
+  if (fromBc) return fromBc.name
+  const seg = currentPath.split('/')
+  return seg.length > 1 ? seg[0] : ''
 }

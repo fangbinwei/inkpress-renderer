@@ -2,7 +2,19 @@
 
 # inkpress-renderer
 
-将 Obsidian 知识库文件夹渲染为带有导航栏、面包屑和暗色模式的静态 HTML 站点。
+将 Obsidian 知识库文件夹渲染为静态 HTML 站点，使用偏文学、阅读优先的默认主题。
+
+![Inkpress 默认主题](./docs/preview.png)
+
+## 默认主题
+
+以阅读为中心的版式：侧栏导航、面包屑、TOC、反向链接、暗色模式，按 `?` 唤出快捷键面板。三种 variant ——  `technical`（默认）、`editorial`、`manuscript`，各自配 light + dark。
+
+在渲染时选择 variant：
+
+```ts
+await renderSite({ ...options, variant: 'editorial' })
+```
 
 ## 安装
 

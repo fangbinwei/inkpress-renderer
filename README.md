@@ -2,7 +2,19 @@ English | [简体中文](./README.zh-CN.md)
 
 # inkpress-renderer
 
-Render Obsidian vault folders into a static HTML site with navigation, breadcrumbs, and dark mode.
+Render Obsidian vault folders into a static HTML site with a literary, reading-first default theme.
+
+![Inkpress default theme](./docs/preview.png)
+
+## Default theme
+
+Reading-first layout with sidebar nav, breadcrumb, TOC, backlinks, dark mode, and a keyboard shortcut overlay (`?`). Three variants — `technical` (default), `editorial`, `manuscript` — each with light + dark modes.
+
+Pick a variant at render time:
+
+```ts
+await renderSite({ ...options, variant: 'editorial' })
+```
 
 ## Install
 

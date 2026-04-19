@@ -1,6 +1,7 @@
 export { renderSite } from './render-site.js'
 export { DefaultTheme } from './theme/default/theme.js'
 export type {
+  BacklinkEntry,
   BreadcrumbItem,
   DeadLinkEntry,
   DeadLinkReason,
@@ -19,4 +20,5 @@ export type {
   SiteConfig,
   SiteIndex,
   Theme,
+  ThemeVariant,
 } from './types.js'

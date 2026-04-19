@@ -10,6 +10,8 @@ export interface FileSystemAdapter {
 
 // --- Render Options & Result ---
 
+export type ThemeVariant = 'technical' | 'editorial' | 'manuscript'
+
 export interface RenderOptions {
   vaultPath: string
   publishDirs: string[]
@@ -17,6 +19,7 @@ export interface RenderOptions {
   uploadMode: 'html' | 'html+md'
   deadLinkPolicy: 'silent' | 'marked'
   fs: FileSystemAdapter
+  variant?: ThemeVariant
   onProgress?: (phase: 'render', current: number, total: number) => void
   signal?: AbortSignal
 }
@@ -84,6 +87,20 @@ export interface PageContext {
   navTree: NavNode
   currentPath: string
   siteConfig: SiteConfig
+  headings: HeadingMeta[]
+  pageIndex: number
+  totalPages: number
+  modified?: string
+  groupName?: string
+  readingTime?: number
+  wordCount?: number
+  backlinks: BacklinkEntry[]
+}
+
+export interface BacklinkEntry {
+  path: string
+  title: string
+  excerpt: string
 }
 
 export interface IndexContext {
@@ -93,6 +110,7 @@ export interface IndexContext {
 
 export interface SiteConfig {
   siteName?: string
+  variant?: ThemeVariant
 }
 
 export interface BreadcrumbItem {

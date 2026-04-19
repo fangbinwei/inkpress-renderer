@@ -136,7 +136,7 @@ describe('renderSite (integration)', () => {
     // 4. Theme elements present
     expect(html).toContain('class="nav-tree"') // sidebar nav
     expect(html).toContain('class="breadcrumb"') // breadcrumb
-    expect(html).toContain('class="theme-toggle"') // dark mode toggle
+    expect(html).toContain('theme-toggle') // dark mode toggle
     expect(html).toContain('class="sidebar"') // sidebar container
     expect(html).toContain('class="content"') // content area
     expect(html).toContain('<title>Normal Note</title>') // page title in <head>

@@ -12,6 +12,7 @@ import {
 import { buildBreadcrumb } from './site/breadcrumb.js'
 import { buildSiteIndex } from './site/site-index.js'
 import type {
+  NavNode,
   OutputFile,
   ParsedPage,
   RawLink,
@@ -223,11 +224,30 @@ export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
   const siteIndex = buildSiteIndex(parsedPages, resolvedOutlinks)
   const navTree = siteIndex.navTree
 
+  // Flatten nav tree into a stable ordered path list for page numbering
+  const orderedPaths = flattenNavPaths(navTree)
+
+  // Invert outlinks → backlinks
+  const backlinksMap = buildBacklinks(
+    parsedInputs,
+    parsedPages,
+    resolvedOutlinks,
+  )
+
   // 10. Render full HTML pages with theme
-  const siteConfig = { siteName: 'Inkpress Site' }
+  const siteConfig = { siteName: 'Inkpress Site', variant: opts.variant }
 
   for (const page of parsedPages) {
     const breadcrumb = buildBreadcrumb(page.publishPath)
+    const orderedIdx = orderedPaths.indexOf(page.publishPath)
+    const pageIndex = orderedIdx >= 0 ? orderedIdx + 1 : 0
+    const modified = await resolveModified(fs, page)
+    const groupName = firstSegment(page.publishPath)
+    const sourceInput = parsedInputs.find(p => p.sourcePath === page.sourcePath)
+    const wordCount = sourceInput ? countWords(sourceInput.content) : 0
+    const readingTime =
+      wordCount > 0 ? Math.max(1, Math.round(wordCount / 250)) : undefined
+    const backlinks = backlinksMap.get(page.publishPath) || []
     const fullHtml = theme.renderPage({
       title: page.title,
       htmlContent: page.htmlContent,
@@ -235,6 +255,14 @@ export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
       navTree,
       currentPath: page.publishPath,
       siteConfig,
+      headings: page.headings,
+      pageIndex,
+      totalPages: orderedPaths.length,
+      modified,
+      groupName,
+      wordCount: wordCount || undefined,
+      readingTime,
+      backlinks,
     })
     outputFiles.push({
       relativePath: page.publishPath,
@@ -294,6 +322,138 @@ export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
   }
 
   return { files: outputFiles, report: reporter.build() }
+}
+
+function countWords(markdown: string): number {
+  // Strip code blocks so their contents don't inflate the count.
+  const stripped = markdown
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`\n]*`/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, a, b) => b || a)
+  const latin = stripped.match(/[A-Za-z0-9][A-Za-z0-9'-]*/g) || []
+  const cjk =
+    stripped.match(/[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/g) ||
+    []
+  return latin.length + cjk.length
+}
+
+function extractExcerpt(html: string, maxChars = 160): string {
+  // Find the first paragraph and strip tags.
+  const paraMatch = html.match(/<p[^>]*>([\s\S]*?)<\/p>/)
+  if (!paraMatch) return ''
+  const text = paraMatch[1]
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (text.length <= maxChars) return text
+  return `${text.slice(0, maxChars).replace(/\s+\S*$/, '')}…`
+}
+
+interface ParsedInputForBacklinks {
+  sourcePath: string
+}
+
+function buildBacklinks(
+  _inputs: ParsedInputForBacklinks[],
+  pages: ParsedPage[],
+  resolvedOutlinks: Map<string, string[]>,
+): Map<string, Array<{ path: string; title: string; excerpt: string }>> {
+  const byPath = new Map<string, ParsedPage>()
+  for (const p of pages) byPath.set(p.publishPath, p)
+
+  const result = new Map<
+    string,
+    Array<{ path: string; title: string; excerpt: string }>
+  >()
+
+  for (const srcPage of pages) {
+    const outlinks = resolvedOutlinks.get(srcPage.publishPath) || []
+    if (outlinks.length === 0) continue
+    const excerpt = extractExcerpt(srcPage.htmlContent)
+    const seen = new Set<string>()
+    const srcDir = posix.dirname(srcPage.publishPath)
+    for (const rel of outlinks) {
+      // Resolve relative href back to absolute publish path
+      const target = posix.normalize(posix.join(srcDir, rel))
+      if (target === srcPage.publishPath) continue
+      if (seen.has(target)) continue
+      seen.add(target)
+      if (!byPath.has(target)) continue
+      const list = result.get(target) || []
+      if (list.some(b => b.path === srcPage.publishPath)) continue
+      list.push({ path: srcPage.publishPath, title: srcPage.title, excerpt })
+      result.set(target, list)
+    }
+  }
+
+  return result
+}
+
+function flattenNavPaths(root: NavNode): string[] {
+  const out: string[] = []
+  walk(root)
+  return out
+  function walk(node: NavNode): void {
+    for (const c of node.children) {
+      if (c.path) out.push(c.path)
+      else walk(c)
+    }
+  }
+}
+
+function firstSegment(publishPath: string): string {
+  const idx = publishPath.indexOf('/')
+  if (idx === -1) return ''
+  return publishPath.slice(0, idx)
+}
+
+const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+]
+
+function formatModified(ms: number): string {
+  const d = new Date(ms)
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`
+}
+
+async function resolveModified(
+  fs: import('./types.js').FileSystemAdapter,
+  page: ParsedPage,
+): Promise<string | undefined> {
+  const fm = page.frontmatter as Record<string, unknown>
+  const raw = fm.modified ?? fm.updated ?? fm.lastmod
+  if (typeof raw === 'string' && raw.trim()) {
+    const ts = Date.parse(raw)
+    if (!Number.isNaN(ts)) return formatModified(ts)
+    return raw
+  }
+  if (raw instanceof Date) return formatModified(raw.getTime())
+  try {
+    const st = await fs.stat(page.sourcePath)
+    if (st.mtime) return formatModified(st.mtime)
+  } catch {
+    // ignore
+  }
+  return undefined
 }
 
 async function buildVaultFileIndex(
