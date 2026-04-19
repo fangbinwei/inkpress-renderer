@@ -1,6 +1,11 @@
-import type { Theme, PageContext, IndexContext, OutputFile } from '../../types.js'
-import { renderPageLayout } from './layout.js'
+import type {
+  IndexContext,
+  OutputFile,
+  PageContext,
+  Theme,
+} from '../../types.js'
 import { renderIndexPage } from './index-page.js'
+import { renderPageLayout } from './layout.js'
 import { CSS, JS } from './styles.js'
 
 const CSS_PATH = '_assets/inkpress/style.css'
@@ -11,23 +16,40 @@ export class DefaultTheme implements Theme {
 
   renderPage(ctx: PageContext): string {
     return renderPageLayout({
-      title: ctx.title, htmlContent: ctx.htmlContent, breadcrumb: ctx.breadcrumb,
-      navTree: ctx.navTree, currentPath: ctx.currentPath,
-      siteName: ctx.siteConfig.siteName || 'Inkpress Site', cssPath: CSS_PATH, jsPath: JS_PATH,
+      title: ctx.title,
+      htmlContent: ctx.htmlContent,
+      breadcrumb: ctx.breadcrumb,
+      navTree: ctx.navTree,
+      currentPath: ctx.currentPath,
+      siteName: ctx.siteConfig.siteName || 'Inkpress Site',
+      cssPath: CSS_PATH,
+      jsPath: JS_PATH,
     })
   }
 
   renderIndex(ctx: IndexContext): string {
     return renderIndexPage({
-      navTree: ctx.navTree, siteName: ctx.siteConfig.siteName || 'Inkpress Site',
-      cssPath: CSS_PATH, jsPath: JS_PATH,
+      navTree: ctx.navTree,
+      siteName: ctx.siteConfig.siteName || 'Inkpress Site',
+      cssPath: CSS_PATH,
+      jsPath: JS_PATH,
     })
   }
 
   getAssets(): OutputFile[] {
     return [
-      { relativePath: CSS_PATH, content: CSS, contentType: 'text/css', cacheControl: 'max-age=2592000' },
-      { relativePath: JS_PATH, content: JS, contentType: 'application/javascript', cacheControl: 'max-age=2592000' },
+      {
+        relativePath: CSS_PATH,
+        content: CSS,
+        contentType: 'text/css',
+        cacheControl: 'max-age=2592000',
+      },
+      {
+        relativePath: JS_PATH,
+        content: JS,
+        contentType: 'application/javascript',
+        cacheControl: 'max-age=2592000',
+      },
     ]
   }
 }

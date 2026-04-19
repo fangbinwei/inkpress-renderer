@@ -1,12 +1,19 @@
 import type { NavNode } from '../../types.js'
 
 function renderNavList(node: NavNode): string {
-  if (node.path !== null) return `<li><a href="/${node.path}">${escapeHtml(node.name)}</a></li>`
-  if (node.name === 'root') return node.children.map(c => renderNavList(c)).join('\n')
+  if (node.path !== null)
+    return `<li><a href="/${node.path}">${escapeHtml(node.name)}</a></li>`
+  if (node.name === 'root')
+    return node.children.map(c => renderNavList(c)).join('\n')
   return `<li><strong>${escapeHtml(node.name)}</strong><ul>${node.children.map(c => renderNavList(c)).join('\n')}</ul></li>`
 }
 
-export function renderIndexPage(opts: { navTree: NavNode; siteName: string; cssPath: string; jsPath: string }): string {
+export function renderIndexPage(opts: {
+  navTree: NavNode
+  siteName: string
+  cssPath: string
+  jsPath: string
+}): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,5 +42,9 @@ export function renderIndexPage(opts: { navTree: NavNode; siteName: string; cssP
 }
 
 function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }

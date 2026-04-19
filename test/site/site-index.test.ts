@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { buildSiteIndex } from '../../src/site/site-index.js'
 import type { ParsedPage } from '../../src/types.js'
 
@@ -10,7 +10,9 @@ describe('buildSiteIndex', () => {
         publishPath: 'notes/normal.html',
         title: 'Normal Note',
         frontmatter: { tags: ['test'] },
-        rawLinks: [{ type: 'wikilink', target: 'setup', isEmbed: false, line: 3 }],
+        rawLinks: [
+          { type: 'wikilink', target: 'setup', isEmbed: false, line: 3 },
+        ],
         headings: [
           { level: 1, text: 'Normal Note', slug: 'normal-note' },
           { level: 2, text: 'Details', slug: 'details' },

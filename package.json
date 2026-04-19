@@ -10,7 +10,13 @@
   "bugs": {
     "url": "https://github.com/fangbinwei/inkpress-renderer/issues"
   },
-  "keywords": ["obsidian", "markdown", "static-site", "renderer", "html"],
+  "keywords": [
+    "obsidian",
+    "markdown",
+    "static-site",
+    "renderer",
+    "html"
+  ],
   "author": "fangbinwei",
   "engines": {
     "node": ">=20.0.0"
@@ -23,7 +29,11 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "format": "biome format --write",
+    "lint": "biome lint",
+    "check": "biome check --write",
+    "check:ci": "biome ci"
   },
   "license": "MIT",
   "dependencies": {
@@ -37,6 +47,7 @@
     "yaml": "^2.4.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.4.12",
     "@types/ali-oss": "^6.23.3",
     "@types/node": "^20.0.0",
     "ali-oss": "^6.23.0",

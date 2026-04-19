@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { resolveImagePath } from '../../src/resolver/image-resolver.js'
+import { describe, expect, it } from 'vitest'
 import { AssetCollector } from '../../src/resolver/asset-collector.js'
+import { resolveImagePath } from '../../src/resolver/image-resolver.js'
 
 describe('resolveImagePath', () => {
   it('resolves relative image path', () => {

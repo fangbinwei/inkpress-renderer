@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { renderSite } from '../../src/index.js'
 import { DefaultTheme } from '../../src/theme/default/theme.js'
 import { createNodeAdapter, TEST_VAULT_PATH } from '../helpers/mock-fs.js'
@@ -33,27 +33,42 @@ describe('renderSite (integration)', () => {
     const result = await renderSite({
       vaultPath: TEST_VAULT_PATH,
       publishDirs: ['notes', 'guides'],
-      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+      theme,
+      uploadMode: 'html',
+      deadLinkPolicy: 'silent',
+      fs,
     })
-    const unpublishedHtml = result.files.find(f => f.relativePath.includes('unpublished'))
+    const unpublishedHtml = result.files.find(f =>
+      f.relativePath.includes('unpublished'),
+    )
     expect(unpublishedHtml).toBeUndefined()
-    expect(result.report.skipped.some(s => s.path.includes('unpublished'))).toBe(true)
+    expect(
+      result.report.skipped.some(s => s.path.includes('unpublished')),
+    ).toBe(true)
   })
 
   it('reports dead links', async () => {
     const result = await renderSite({
       vaultPath: TEST_VAULT_PATH,
       publishDirs: ['notes', 'guides'],
-      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+      theme,
+      uploadMode: 'html',
+      deadLinkPolicy: 'silent',
+      fs,
     })
-    expect(result.report.deadLinks.some(d => d.targetLink === 'missing-note')).toBe(true)
+    expect(
+      result.report.deadLinks.some(d => d.targetLink === 'missing-note'),
+    ).toBe(true)
   })
 
   it('includes source md files when uploadMode is html+md', async () => {
     const result = await renderSite({
       vaultPath: TEST_VAULT_PATH,
       publishDirs: ['notes', 'guides'],
-      theme, uploadMode: 'html+md', deadLinkPolicy: 'silent', fs,
+      theme,
+      uploadMode: 'html+md',
+      deadLinkPolicy: 'silent',
+      fs,
     })
     const mdFiles = result.files.filter(f => f.relativePath.endsWith('.md'))
     expect(mdFiles.length).toBeGreaterThanOrEqual(6)
@@ -63,7 +78,10 @@ describe('renderSite (integration)', () => {
     const result = await renderSite({
       vaultPath: TEST_VAULT_PATH,
       publishDirs: ['notes', 'guides'],
-      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+      theme,
+      uploadMode: 'html',
+      deadLinkPolicy: 'silent',
+      fs,
     })
     const imgFile = result.files.find(f => f.relativePath.includes('img.png'))
     expect(imgFile).toBeDefined()
@@ -74,7 +92,10 @@ describe('renderSite (integration)', () => {
     const result = await renderSite({
       vaultPath: TEST_VAULT_PATH,
       publishDirs: ['notes', 'guides'],
-      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+      theme,
+      uploadMode: 'html',
+      deadLinkPolicy: 'silent',
+      fs,
     })
     const htmlFile = result.files.find(f => f.relativePath.endsWith('.html'))!
     expect(htmlFile.cacheControl).toBe('no-cache')
@@ -86,7 +107,10 @@ describe('renderSite (integration)', () => {
     const result = await renderSite({
       vaultPath: TEST_VAULT_PATH,
       publishDirs: ['notes', 'guides'],
-      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+      theme,
+      uploadMode: 'html',
+      deadLinkPolicy: 'silent',
+      fs,
     })
 
     const page = result.files.find(f => f.relativePath === 'notes/normal.html')!
@@ -110,11 +134,11 @@ describe('renderSite (integration)', () => {
     expect(html).toMatch(/<h1 id="normal-note">Normal Note<\/h1>/)
 
     // 4. Theme elements present
-    expect(html).toContain('class="nav-tree"')       // sidebar nav
-    expect(html).toContain('class="breadcrumb"')      // breadcrumb
-    expect(html).toContain('class="theme-toggle"')    // dark mode toggle
-    expect(html).toContain('class="sidebar"')         // sidebar container
-    expect(html).toContain('class="content"')         // content area
+    expect(html).toContain('class="nav-tree"') // sidebar nav
+    expect(html).toContain('class="breadcrumb"') // breadcrumb
+    expect(html).toContain('class="theme-toggle"') // dark mode toggle
+    expect(html).toContain('class="sidebar"') // sidebar container
+    expect(html).toContain('class="content"') // content area
     expect(html).toContain('<title>Normal Note</title>') // page title in <head>
   })
 
@@ -125,7 +149,10 @@ describe('renderSite (integration)', () => {
     const result = await renderSite({
       vaultPath: TEST_VAULT_PATH,
       publishDirs: ['notes', 'guides'],
-      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+      theme,
+      uploadMode: 'html',
+      deadLinkPolicy: 'silent',
+      fs,
       signal: controller.signal,
     })
 
@@ -133,7 +160,7 @@ describe('renderSite (integration)', () => {
     // (they come after the render loop)
     expect(result.report.rendered).toBe(0)
     const pageHtmlFiles = result.files.filter(
-      f => f.relativePath.endsWith('.html') && f.relativePath !== 'index.html'
+      f => f.relativePath.endsWith('.html') && f.relativePath !== 'index.html',
     )
     expect(pageHtmlFiles).toHaveLength(0)
   })
@@ -144,7 +171,10 @@ describe('renderSite (integration)', () => {
     const result = await renderSite({
       vaultPath: TEST_VAULT_PATH,
       publishDirs: ['notes', 'guides'],
-      theme, uploadMode: 'html', deadLinkPolicy: 'silent', fs,
+      theme,
+      uploadMode: 'html',
+      deadLinkPolicy: 'silent',
+      fs,
       signal: controller.signal,
       onProgress: (_phase, current, _total) => {
         // Abort after first page renders
@@ -156,7 +186,7 @@ describe('renderSite (integration)', () => {
     // because abort is checked at the TOP of the next iteration
     expect(result.report.rendered).toBe(1)
     const pageHtmlFiles = result.files.filter(
-      f => f.relativePath.endsWith('.html') && f.relativePath !== 'index.html'
+      f => f.relativePath.endsWith('.html') && f.relativePath !== 'index.html',
     )
     expect(pageHtmlFiles).toHaveLength(1)
   })

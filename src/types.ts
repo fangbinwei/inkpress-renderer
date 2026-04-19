@@ -49,10 +49,10 @@ export interface FileSkipEntry {
 }
 
 export type DeadLinkReason =
-  | 'target-missing'       // No file with this name exists anywhere in the vault
-  | 'not-published'        // File exists in vault but not in any publishDir
-  | 'unsupported-asset'    // File exists but renderer does not render it (e.g. .excalidraw, .canvas)
-  | 'ambiguous'            // Multiple files match and short-name lookup is not unique
+  | 'target-missing' // No file with this name exists anywhere in the vault
+  | 'not-published' // File exists in vault but not in any publishDir
+  | 'unsupported-asset' // File exists but renderer does not render it (e.g. .excalidraw, .canvas)
+  | 'ambiguous' // Multiple files match and short-name lookup is not unique
 
 export interface DeadLinkEntry {
   sourcePath: string

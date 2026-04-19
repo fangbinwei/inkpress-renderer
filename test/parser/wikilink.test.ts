@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { parseWikilinks } from '../../src/parser/wikilink.js'
 
 describe('parseWikilinks', () => {
@@ -32,7 +32,11 @@ describe('parseWikilinks', () => {
     expect(links).toHaveLength(3)
     expect(links[0]).toMatchObject({ target: 'note-a', line: 1 })
     expect(links[1]).toMatchObject({ target: 'note-b', line: 3 })
-    expect(links[2]).toMatchObject({ target: 'img.png', isEmbed: true, line: 5 })
+    expect(links[2]).toMatchObject({
+      target: 'img.png',
+      isEmbed: true,
+      line: 5,
+    })
   })
 
   it('returns empty array for markdown with no wikilinks', () => {

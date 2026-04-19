@@ -1,4 +1,9 @@
-import type { PublishReport, FileSkipEntry, DeadLinkEntry, MissingImageEntry } from '../types.js'
+import type {
+  DeadLinkEntry,
+  FileSkipEntry,
+  MissingImageEntry,
+  PublishReport,
+} from '../types.js'
 
 export class Reporter {
   private _rendered = 0
@@ -7,11 +12,21 @@ export class Reporter {
   private _missingImages: MissingImageEntry[] = []
   private _warnings: string[] = []
 
-  rendered(): void { this._rendered++ }
-  skipped(path: string, reason: string): void { this._skipped.push({ path, reason }) }
-  deadLink(entry: DeadLinkEntry): void { this._deadLinks.push(entry) }
-  missingImage(sourcePath: string, imagePath: string, line: number): void { this._missingImages.push({ sourcePath, imagePath, line }) }
-  warn(message: string): void { this._warnings.push(message) }
+  rendered(): void {
+    this._rendered++
+  }
+  skipped(path: string, reason: string): void {
+    this._skipped.push({ path, reason })
+  }
+  deadLink(entry: DeadLinkEntry): void {
+    this._deadLinks.push(entry)
+  }
+  missingImage(sourcePath: string, imagePath: string, line: number): void {
+    this._missingImages.push({ sourcePath, imagePath, line })
+  }
+  warn(message: string): void {
+    this._warnings.push(message)
+  }
 
   build(): PublishReport {
     return {

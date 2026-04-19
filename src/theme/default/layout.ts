@@ -1,4 +1,4 @@
-import type { NavNode, BreadcrumbItem } from '../../types.js'
+import type { BreadcrumbItem, NavNode } from '../../types.js'
 
 function renderNavNode(node: NavNode, currentPath: string): string {
   if (node.path !== null) {
@@ -12,13 +12,25 @@ function renderNavNode(node: NavNode, currentPath: string): string {
 }
 
 function renderBreadcrumb(items: BreadcrumbItem[]): string {
-  return items.map(item => {
-    if (item.path !== null) return `<a href="/${item.path}">${escapeHtml(item.name)}</a>`
-    return `<span>${escapeHtml(item.name)}</span>`
-  }).join('<span class="sep">/</span>')
+  return items
+    .map(item => {
+      if (item.path !== null)
+        return `<a href="/${item.path}">${escapeHtml(item.name)}</a>`
+      return `<span>${escapeHtml(item.name)}</span>`
+    })
+    .join('<span class="sep">/</span>')
 }
 
-export function renderPageLayout(opts: { title: string; htmlContent: string; breadcrumb: BreadcrumbItem[]; navTree: NavNode; currentPath: string; siteName: string; cssPath: string; jsPath: string }): string {
+export function renderPageLayout(opts: {
+  title: string
+  htmlContent: string
+  breadcrumb: BreadcrumbItem[]
+  navTree: NavNode
+  currentPath: string
+  siteName: string
+  cssPath: string
+  jsPath: string
+}): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,5 +59,9 @@ export function renderPageLayout(opts: { title: string; htmlContent: string; bre
 }
 
 function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }

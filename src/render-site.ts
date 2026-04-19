@@ -1,16 +1,23 @@
-import { posix } from 'path'
-import type {
-  RenderOptions, RenderResult, OutputFile, ParsedPage, RawLink,
-} from './types.js'
+import { posix } from 'node:path'
+import { renderPage } from './generator/html-renderer.js'
 import { parseFrontmatter } from './parser/frontmatter.js'
 import { parseWikilinks } from './parser/wikilink.js'
-import { renderPage } from './generator/html-renderer.js'
-import { createLinkResolver, type VaultFileIndex } from './resolver/link-resolver.js'
-import { resolveImagePath } from './resolver/image-resolver.js'
+import { Reporter } from './report/reporter.js'
 import { AssetCollector } from './resolver/asset-collector.js'
+import { resolveImagePath } from './resolver/image-resolver.js'
+import {
+  createLinkResolver,
+  type VaultFileIndex,
+} from './resolver/link-resolver.js'
 import { buildBreadcrumb } from './site/breadcrumb.js'
 import { buildSiteIndex } from './site/site-index.js'
-import { Reporter } from './report/reporter.js'
+import type {
+  OutputFile,
+  ParsedPage,
+  RawLink,
+  RenderOptions,
+  RenderResult,
+} from './types.js'
 
 const CONTENT_TYPES: Record<string, string> = {
   '.png': 'image/png',
@@ -33,14 +40,21 @@ function guessContentType(filePath: string): string {
 }
 
 function cacheControlFor(contentType: string): string {
-  if (contentType === 'text/html' || contentType === 'application/json') return 'no-cache'
-  if (contentType === 'text/css' || contentType === 'application/javascript') return 'max-age=2592000'
-  if (contentType.startsWith('image/') || contentType === 'application/pdf') return 'max-age=864000'
+  if (contentType === 'text/html' || contentType === 'application/json')
+    return 'no-cache'
+  if (contentType === 'text/css' || contentType === 'application/javascript')
+    return 'max-age=2592000'
+  if (contentType.startsWith('image/') || contentType === 'application/pdf')
+    return 'max-age=864000'
   if (contentType === 'text/markdown') return 'no-cache'
   return 'no-cache'
 }
 
-function extractTitle(frontmatter: Record<string, unknown>, content: string, sourcePath: string): string {
+function extractTitle(
+  frontmatter: Record<string, unknown>,
+  content: string,
+  sourcePath: string,
+): string {
   if (typeof frontmatter.title === 'string') return frontmatter.title
   const headingMatch = /^#\s+(.+)$/m.exec(content)
   if (headingMatch) return headingMatch[1].trim()
@@ -49,7 +63,15 @@ function extractTitle(frontmatter: Record<string, unknown>, content: string, sou
 }
 
 export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
-  const { publishDirs, theme, uploadMode, deadLinkPolicy, fs, onProgress, signal } = opts
+  const {
+    publishDirs,
+    theme,
+    uploadMode,
+    deadLinkPolicy,
+    fs,
+    onProgress,
+    signal,
+  } = opts
   const reporter = new Reporter()
   const assetCollector = new AssetCollector()
   const outputFiles: OutputFile[] = []
@@ -105,7 +127,13 @@ export async function renderSite(opts: RenderOptions): Promise<RenderResult> {
     }
     const title = extractTitle(frontmatter, content, mdFile)
     const rawLinks = parseWikilinks(raw)
-    parsedInputs.push({ sourcePath: mdFile, frontmatter, content, title, rawLinks })
+    parsedInputs.push({
+      sourcePath: mdFile,
+      frontmatter,
+      content,
+      title,
+      rawLinks,
+    })
   }
 
   // 5. Build published pages map (name without .md -> html path) for link resolution

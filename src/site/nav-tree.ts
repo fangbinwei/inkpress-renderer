@@ -11,7 +11,9 @@ export function buildNavTree(pages: PageEntry[]): NavNode {
     const parts = page.path.split('/')
     let current = root
     for (let i = 0; i < parts.length - 1; i++) {
-      let child = current.children.find(c => c.name === parts[i] && c.path === null)
+      let child = current.children.find(
+        c => c.name === parts[i] && c.path === null,
+      )
       if (!child) {
         child = { name: parts[i], path: null, children: [] }
         current.children.push(child)

@@ -1,7 +1,7 @@
 import { parseMarkdown } from '../parser/markdown.js'
-import { highlightCode } from './highlight.js'
-import type { HeadingMeta } from '../types.js'
 import type { ResolveResult } from '../resolver/link-resolver.js'
+import type { HeadingMeta } from '../types.js'
+import { highlightCode } from './highlight.js'
 
 const WIKILINK_RE = /(!)?\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g
 const CODE_BLOCK_RE = /```[\s\S]*?```/g
@@ -19,7 +19,9 @@ interface RenderPageResult {
   headings: HeadingMeta[]
 }
 
-export async function renderPage(opts: RenderPageOptions): Promise<RenderPageResult> {
+export async function renderPage(
+  opts: RenderPageOptions,
+): Promise<RenderPageResult> {
   const processedMd = substituteWikilinks(opts)
   let html = await parseMarkdown(processedMd)
   html = await highlightCodeBlocks(html)
@@ -32,26 +34,31 @@ function substituteWikilinks(opts: RenderPageOptions): string {
   const { markdown, resolveLink, resolveImage, deadLinkPolicy } = opts
 
   const codeBlocks: string[] = []
-  let protected_ = markdown.replace(CODE_BLOCK_RE, (match) => {
+  let protected_ = markdown.replace(CODE_BLOCK_RE, match => {
     codeBlocks.push(match)
     return `%%CODEBLOCK_${codeBlocks.length - 1}%%`
   })
 
-  protected_ = protected_.replace(WIKILINK_RE, (_match, bang, target, display) => {
-    const trimmedTarget = target.trim()
-    const displayText = display?.trim() || trimmedTarget
+  protected_ = protected_.replace(
+    WIKILINK_RE,
+    (_match, bang, target, display) => {
+      const trimmedTarget = target.trim()
+      const displayText = display?.trim() || trimmedTarget
 
-    if (bang === '!') {
-      const resolvedPath = resolveImage(trimmedTarget)
-      if (resolvedPath) return `![${displayText}](${resolvedPath})`
-      return `![${displayText}](${trimmedTarget})`
-    }
+      if (bang === '!') {
+        const resolvedPath = resolveImage(trimmedTarget)
+        if (resolvedPath) return `![${displayText}](${resolvedPath})`
+        return `![${displayText}](${trimmedTarget})`
+      }
 
-    const result = resolveLink(trimmedTarget)
-    if (result.resolved && result.href) return `[${displayText}](${result.href})`
-    if (deadLinkPolicy === 'marked') return `<span class="dead-link">${displayText}</span>`
-    return displayText
-  })
+      const result = resolveLink(trimmedTarget)
+      if (result.resolved && result.href)
+        return `[${displayText}](${result.href})`
+      if (deadLinkPolicy === 'marked')
+        return `<span class="dead-link">${displayText}</span>`
+      return displayText
+    },
+  )
 
   for (let i = 0; i < codeBlocks.length; i++) {
     protected_ = protected_.replace(`%%CODEBLOCK_${i}%%`, codeBlocks[i])
@@ -78,18 +85,24 @@ function extractHeadings(html: string): HeadingMeta[] {
 
 function addHeadingIds(html: string, headings: HeadingMeta[]): string {
   let idx = 0
-  return html.replace(/<h([1-6])>/g, (original, level) => {
+  return html.replace(/<h([1-6])>/g, (original, _level) => {
     const heading = headings[idx++]
     return heading ? `<h${heading.level} id="${heading.slug}">` : original
   })
 }
 
 function slugify(text: string): string {
-  return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
 }
 
 // Post-process: replace <pre><code class="language-xxx">...</code></pre> with shiki output
-const CODE_HTML_RE = /<pre><code class="language-([\w+#.-]+)">([\s\S]*?)<\/code><\/pre>/g
+const CODE_HTML_RE =
+  /<pre><code class="language-([\w+#.-]+)">([\s\S]*?)<\/code><\/pre>/g
 
 async function highlightCodeBlocks(html: string): Promise<string> {
   const matches: { full: string; lang: string; code: string }[] = []
@@ -110,7 +123,9 @@ async function highlightCodeBlocks(html: string): Promise<string> {
 function unescapeHtml(str: string): string {
   return str
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, code) =>
+      String.fromCharCode(parseInt(code, 16)),
+    )
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')

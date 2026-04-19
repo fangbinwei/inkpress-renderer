@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { renderPage } from '../../src/generator/html-renderer.js'
 
 describe('renderPage', () => {
@@ -12,7 +12,9 @@ describe('renderPage', () => {
     })
     expect(result.html).toContain('<h1 id="hello">Hello</h1>')
     expect(result.html).toContain('<p>A paragraph.</p>')
-    expect(result.headings).toEqual([{ level: 1, text: 'Hello', slug: 'hello' }])
+    expect(result.headings).toEqual([
+      { level: 1, text: 'Hello', slug: 'hello' },
+    ])
   })
 
   it('adds stable ids to multiple headings', async () => {
@@ -30,7 +32,8 @@ describe('renderPage', () => {
 
   it('deduplicates heading slugs', async () => {
     const result = await renderPage({
-      markdown: '## Example\n\nFirst.\n\n## Example\n\nSecond.\n\n## Example\n\nThird.',
+      markdown:
+        '## Example\n\nFirst.\n\n## Example\n\nSecond.\n\n## Example\n\nThird.',
       sourcePath: 'notes/test.md',
       resolveLink: () => ({ resolved: false, href: null }),
       resolveImage: () => null,
@@ -74,8 +77,9 @@ describe('renderPage', () => {
     const result = await renderPage({
       markdown: 'See [[other-note]] for info.',
       sourcePath: 'notes/test.md',
-      resolveLink: (target) => {
-        if (target === 'other-note') return { resolved: true, href: 'other-note.html' }
+      resolveLink: target => {
+        if (target === 'other-note')
+          return { resolved: true, href: 'other-note.html' }
         return { resolved: false, href: null }
       },
       resolveImage: () => null,
@@ -124,7 +128,8 @@ describe('renderPage', () => {
       markdown: 'Image: ![[photo.png]]',
       sourcePath: 'notes/test.md',
       resolveLink: () => ({ resolved: false, href: null }),
-      resolveImage: (target) => target === 'photo.png' ? 'assets/photo.png' : null,
+      resolveImage: target =>
+        target === 'photo.png' ? 'assets/photo.png' : null,
       deadLinkPolicy: 'silent',
     })
     expect(result.html).toContain('<img src="assets/photo.png"')

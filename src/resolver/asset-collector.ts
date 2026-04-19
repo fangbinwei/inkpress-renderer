@@ -1,4 +1,4 @@
-import { posix } from 'path'
+import { posix } from 'node:path'
 
 export class AssetCollector {
   private assets = new Set<string>()
@@ -8,7 +8,8 @@ export class AssetCollector {
     if (this.assets.has(path)) return
     this.assets.add(path)
     const shortName = posix.basename(path)
-    if (!this.shortNameIndex.has(shortName)) this.shortNameIndex.set(shortName, path)
+    if (!this.shortNameIndex.has(shortName))
+      this.shortNameIndex.set(shortName, path)
   }
 
   findAsset(shortName: string): string | null {

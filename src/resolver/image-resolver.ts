@@ -1,7 +1,11 @@
-import { posix } from 'path'
+import { posix } from 'node:path'
 
-export function resolveImagePath(imageSrc: string, fromSourcePath: string): string {
-  if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) return imageSrc
+export function resolveImagePath(
+  imageSrc: string,
+  fromSourcePath: string,
+): string {
+  if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://'))
+    return imageSrc
   const fromDir = posix.dirname(fromSourcePath)
   return posix.normalize(posix.join(fromDir, imageSrc))
 }

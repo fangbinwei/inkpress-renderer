@@ -6,13 +6,28 @@ function getHighlighter(): Promise<Highlighter> {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
       themes: ['github-light', 'github-dark'],
-      langs: ['javascript', 'typescript', 'python', 'rust', 'go', 'bash', 'json', 'yaml', 'html', 'css', 'markdown'],
+      langs: [
+        'javascript',
+        'typescript',
+        'python',
+        'rust',
+        'go',
+        'bash',
+        'json',
+        'yaml',
+        'html',
+        'css',
+        'markdown',
+      ],
     })
   }
   return highlighterPromise
 }
 
-export async function highlightCode(code: string, lang: string): Promise<string> {
+export async function highlightCode(
+  code: string,
+  lang: string,
+): Promise<string> {
   if (!lang) {
     return `<pre><code>${escapeHtml(code)}</code></pre>`
   }

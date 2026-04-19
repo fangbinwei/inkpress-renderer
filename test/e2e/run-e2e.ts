@@ -8,15 +8,17 @@
  */
 
 import 'dotenv/config'
-import { renderSite, DefaultTheme } from '../../src/index.js'
-import { createNodeAdapter, TEST_VAULT_PATH } from '../helpers/mock-fs.js'
-import { writeFileSync, mkdirSync, rmSync, readdirSync } from 'fs'
-import { join, dirname } from 'path'
-import { config } from 'dotenv'
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import OSS from 'ali-oss'
+import { config } from 'dotenv'
+import { DefaultTheme, renderSite } from '../../src/index.js'
+import { createNodeAdapter, TEST_VAULT_PATH } from '../helpers/mock-fs.js'
 
 // Load .env.local (dotenv/config only loads .env by default)
-config({ path: join(dirname(new URL(import.meta.url).pathname), '../../.env.local') })
+config({
+  path: join(dirname(new URL(import.meta.url).pathname), '../../.env.local'),
+})
 
 // --- Config ---
 const OSS_PREFIX = '_inkpress-e2e-test/'
@@ -27,7 +29,9 @@ const ENDPOINT = 'oss-cn-shanghai.aliyuncs.com'
 function loadCredentials(): { accessKeyId: string; accessKeySecret: string } {
   const { ACCESS_KEY_ID, ACCESS_KEY_SECRET } = process.env
   if (!ACCESS_KEY_ID || !ACCESS_KEY_SECRET) {
-    throw new Error('No OSS credentials found. Create .env.local with ACCESS_KEY_ID and ACCESS_KEY_SECRET, or set env vars.')
+    throw new Error(
+      'No OSS credentials found. Create .env.local with ACCESS_KEY_ID and ACCESS_KEY_SECRET, or set env vars.',
+    )
   }
   return { accessKeyId: ACCESS_KEY_ID, accessKeySecret: ACCESS_KEY_SECRET }
 }
@@ -67,7 +71,10 @@ async function main() {
 
   // --- Phase 2: Write to disk ---
   console.log('\n[2/5] Writing output to disk...')
-  const outputDir = join(dirname(new URL(import.meta.url).pathname), '../../.e2e-output')
+  const outputDir = join(
+    dirname(new URL(import.meta.url).pathname),
+    '../../.e2e-output',
+  )
   rmSync(outputDir, { recursive: true, force: true })
 
   for (const file of result.files) {
@@ -102,7 +109,11 @@ async function main() {
     try {
       siteIndex = JSON.parse(siteJson.content as string)
       checks.push({ name: 'site.json is valid JSON', pass: true })
-      checks.push({ name: 'site.json has pages', pass: siteIndex.pages.length >= 6, detail: `${siteIndex.pages.length} pages` })
+      checks.push({
+        name: 'site.json has pages',
+        pass: siteIndex.pages.length >= 6,
+        detail: `${siteIndex.pages.length} pages`,
+      })
       checks.push({ name: 'site.json has navTree', pass: !!siteIndex.navTree })
     } catch {
       checks.push({ name: 'site.json is valid JSON', pass: false })
@@ -112,19 +123,29 @@ async function main() {
   }
 
   // Check CSS asset exists
-  checks.push({ name: 'CSS asset exists', pass: result.files.some(f => f.relativePath.endsWith('.css')) })
+  checks.push({
+    name: 'CSS asset exists',
+    pass: result.files.some(f => f.relativePath.endsWith('.css')),
+  })
 
   // Check JS asset exists
-  checks.push({ name: 'JS asset exists', pass: result.files.some(f => f.relativePath.endsWith('.js')) })
+  checks.push({
+    name: 'JS asset exists',
+    pass: result.files.some(f => f.relativePath.endsWith('.js')),
+  })
 
   // Check image asset included
-  checks.push({ name: 'Image asset (img.png) included', pass: result.files.some(f => f.relativePath.includes('img.png')) })
+  checks.push({
+    name: 'Image asset (img.png) included',
+    pass: result.files.some(f => f.relativePath.includes('img.png')),
+  })
 
   // Check unpublished.md was skipped
   checks.push({
     name: 'unpublished.md was skipped',
-    pass: !result.files.some(f => f.relativePath.includes('unpublished')) &&
-          result.report.skipped.some(s => s.path.includes('unpublished')),
+    pass:
+      !result.files.some(f => f.relativePath.includes('unpublished')) &&
+      result.report.skipped.some(s => s.path.includes('unpublished')),
   })
 
   // Check dead links reported
@@ -135,33 +156,66 @@ async function main() {
 
   // Check Cache-Control headers
   const htmlFile = htmlFiles[0]
-  checks.push({ name: 'HTML Cache-Control is no-cache', pass: htmlFile?.cacheControl === 'no-cache' })
+  checks.push({
+    name: 'HTML Cache-Control is no-cache',
+    pass: htmlFile?.cacheControl === 'no-cache',
+  })
   const cssFile = result.files.find(f => f.relativePath.endsWith('.css'))
-  checks.push({ name: 'CSS Cache-Control is max-age=2592000', pass: cssFile?.cacheControl === 'max-age=2592000' })
+  checks.push({
+    name: 'CSS Cache-Control is max-age=2592000',
+    pass: cssFile?.cacheControl === 'max-age=2592000',
+  })
 
   // Check HTML contains expected content
-  const normalHtml = result.files.find(f => f.relativePath.includes('normal.html'))
+  const normalHtml = result.files.find(f =>
+    f.relativePath.includes('normal.html'),
+  )
   if (normalHtml) {
     const content = normalHtml.content as string
-    checks.push({ name: 'HTML contains DOCTYPE', pass: content.includes('<!DOCTYPE html>') })
-    checks.push({ name: 'HTML contains sidebar nav', pass: content.includes('nav-tree') })
-    checks.push({ name: 'HTML contains breadcrumb', pass: content.includes('breadcrumb') })
-    checks.push({ name: 'HTML contains dark mode toggle', pass: content.includes('theme-toggle') })
+    checks.push({
+      name: 'HTML contains DOCTYPE',
+      pass: content.includes('<!DOCTYPE html>'),
+    })
+    checks.push({
+      name: 'HTML contains sidebar nav',
+      pass: content.includes('nav-tree'),
+    })
+    checks.push({
+      name: 'HTML contains breadcrumb',
+      pass: content.includes('breadcrumb'),
+    })
+    checks.push({
+      name: 'HTML contains dark mode toggle',
+      pass: content.includes('theme-toggle'),
+    })
   }
 
   // Check wikilink resolution
-  const wikilinkHtml = result.files.find(f => f.relativePath.includes('with-wikilink.html'))
+  const wikilinkHtml = result.files.find(f =>
+    f.relativePath.includes('with-wikilink.html'),
+  )
   if (wikilinkHtml) {
     const content = wikilinkHtml.content as string
-    checks.push({ name: 'Wikilink resolved to HTML link', pass: content.includes('normal.html') })
-    checks.push({ name: 'Dead wikilink rendered as plain text', pass: !content.includes('href="missing-note"') })
+    checks.push({
+      name: 'Wikilink resolved to HTML link',
+      pass: content.includes('normal.html'),
+    })
+    checks.push({
+      name: 'Dead wikilink rendered as plain text',
+      pass: !content.includes('href="missing-note"'),
+    })
   }
 
   // Check frontmatter title used
-  const frontmatterHtml = result.files.find(f => f.relativePath.includes('with-frontmatter.html'))
+  const frontmatterHtml = result.files.find(f =>
+    f.relativePath.includes('with-frontmatter.html'),
+  )
   if (frontmatterHtml) {
     const content = frontmatterHtml.content as string
-    checks.push({ name: 'Frontmatter title used in <title>', pass: content.includes('<title>Custom Title</title>') })
+    checks.push({
+      name: 'Frontmatter title used in <title>',
+      pass: content.includes('<title>Custom Title</title>'),
+    })
   }
 
   // Print results
@@ -194,7 +248,10 @@ async function main() {
 
   for (const file of result.files) {
     const ossPath = OSS_PREFIX + file.relativePath
-    const content = typeof file.content === 'string' ? Buffer.from(file.content) : file.content
+    const content =
+      typeof file.content === 'string'
+        ? Buffer.from(file.content)
+        : file.content
 
     try {
       await client.put(ossPath, content, {
@@ -205,7 +262,9 @@ async function main() {
       })
       uploadCount++
     } catch (e) {
-      uploadErrors.push(`${file.relativePath}: ${e instanceof Error ? e.message : String(e)}`)
+      uploadErrors.push(
+        `${file.relativePath}: ${e instanceof Error ? e.message : String(e)}`,
+      )
     }
   }
 
@@ -217,8 +276,10 @@ async function main() {
 
   // Verify a file exists on OSS
   try {
-    const headResult = await client.head(OSS_PREFIX + 'index.html')
-    console.log(`  Verified: index.html exists on OSS (status: ${headResult.status})`)
+    const headResult = await client.head(`${OSS_PREFIX}index.html`)
+    console.log(
+      `  Verified: index.html exists on OSS (status: ${headResult.status})`,
+    )
   } catch (e) {
     console.error(`  Failed to verify index.html on OSS: ${e}`)
   }
@@ -226,7 +287,10 @@ async function main() {
   // --- Phase 5: Cleanup ---
   console.log('\n[5/5] Cleaning up OSS test files...')
   try {
-    const listResult = await client.list({ prefix: OSS_PREFIX, 'max-keys': 1000 }, {})
+    const listResult = await client.list(
+      { prefix: OSS_PREFIX, 'max-keys': 1000 },
+      {},
+    )
     if (listResult.objects && listResult.objects.length > 0) {
       const keys = listResult.objects.map((o: any) => o.name)
       await client.deleteMulti(keys, { quiet: true })

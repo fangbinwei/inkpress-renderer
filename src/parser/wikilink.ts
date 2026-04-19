@@ -16,9 +16,9 @@ export function parseWikilinks(markdown: string): RawLink[] {
   // Mask frontmatter, code blocks, and inline code so wikilink-looking tokens inside them are ignored.
   // Use equal-length space runs (not replacements that remove content) so character offsets stay aligned.
   const stripped = markdown
-    .replace(FRONTMATTER_RE, (match) => ' '.repeat(match.length))
-    .replace(CODE_BLOCK_RE, (match) => ' '.repeat(match.length))
-    .replace(INLINE_CODE_RE, (match) => ' '.repeat(match.length))
+    .replace(FRONTMATTER_RE, match => ' '.repeat(match.length))
+    .replace(CODE_BLOCK_RE, match => ' '.repeat(match.length))
+    .replace(INLINE_CODE_RE, match => ' '.repeat(match.length))
 
   const links: RawLink[] = []
 
@@ -34,10 +34,11 @@ export function parseWikilinks(markdown: string): RawLink[] {
   WIKILINK_RE.lastIndex = 0
   while ((match = WIKILINK_RE.exec(stripped)) !== null) {
     const offset = match.index
-    const line = lineOffsets.findIndex((start, idx) => {
-      const nextStart = lineOffsets[idx + 1] ?? Infinity
-      return offset >= start && offset < nextStart
-    }) + 1
+    const line =
+      lineOffsets.findIndex((start, idx) => {
+        const nextStart = lineOffsets[idx + 1] ?? Infinity
+        return offset >= start && offset < nextStart
+      }) + 1
 
     links.push({
       type: 'wikilink',

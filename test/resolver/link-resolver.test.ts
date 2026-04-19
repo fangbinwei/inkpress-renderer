@@ -1,14 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { createLinkResolver, type VaultFileIndex } from '../../src/resolver/link-resolver.js'
-
-function emptyVaultIndex(): VaultFileIndex {
-  return {
-    unpublishedMd: new Set(),
-    unpublishedMdByBasename: new Map(),
-    assets: new Set(),
-    assetsByBasename: new Map(),
-  }
-}
+import { describe, expect, it } from 'vitest'
+import { createLinkResolver } from '../../src/resolver/link-resolver.js'
 
 describe('LinkResolver', () => {
   const publishedPages = new Map<string, string>([
@@ -23,7 +14,7 @@ describe('LinkResolver', () => {
   it('resolves a wikilink to a known page', () => {
     const result = resolver.resolve(
       { type: 'wikilink', target: 'normal', isEmbed: false, line: 5 },
-      'notes/with-wikilink.md'
+      'notes/with-wikilink.md',
     )
     expect(result.resolved).toBe(true)
     expect(result.href).toBe('normal.html')
@@ -32,7 +23,7 @@ describe('LinkResolver', () => {
   it('resolves a cross-directory wikilink', () => {
     const result = resolver.resolve(
       { type: 'wikilink', target: 'setup', isEmbed: false, line: 3 },
-      'notes/with-wikilink.md'
+      'notes/with-wikilink.md',
     )
     expect(result.resolved).toBe(true)
     expect(result.href).toBe('../guides/setup.html')
@@ -41,7 +32,7 @@ describe('LinkResolver', () => {
   it('strips .md suffix from target when matching', () => {
     const result = resolver.resolve(
       { type: 'wikilink', target: 'notes/normal.md', isEmbed: false, line: 1 },
-      'guides/setup.md'
+      'guides/setup.md',
     )
     expect(result.resolved).toBe(true)
     expect(result.href).toBe('../notes/normal.html')
@@ -55,7 +46,7 @@ describe('LinkResolver', () => {
     const r = createLinkResolver(pages)
     const result = r.resolve(
       { type: 'wikilink', target: 'entities/_index', isEmbed: false, line: 10 },
-      'wiki/log.md'
+      'wiki/log.md',
     )
     expect(result.resolved).toBe(true)
     expect(result.href).toBe('entities/_index.html')
@@ -64,7 +55,7 @@ describe('LinkResolver', () => {
   it('marks unresolvable wikilinks as dead', () => {
     const result = resolver.resolve(
       { type: 'wikilink', target: 'missing-note', isEmbed: false, line: 7 },
-      'notes/with-wikilink.md'
+      'notes/with-wikilink.md',
     )
     expect(result.resolved).toBe(false)
     expect(result.href).toBeNull()
@@ -72,16 +63,32 @@ describe('LinkResolver', () => {
 
   it('collects dead links with reason=target-missing when no vault index', () => {
     const r = createLinkResolver(publishedPages)
-    r.resolve({ type: 'wikilink', target: 'missing', isEmbed: false, line: 3 }, 'notes/test.md')
+    r.resolve(
+      { type: 'wikilink', target: 'missing', isEmbed: false, line: 3 },
+      'notes/test.md',
+    )
     const dead = r.getDeadLinks()
     expect(dead).toHaveLength(1)
-    expect(dead[0]).toMatchObject({ sourcePath: 'notes/test.md', targetLink: 'missing', line: 3, reason: 'target-missing' })
+    expect(dead[0]).toMatchObject({
+      sourcePath: 'notes/test.md',
+      targetLink: 'missing',
+      line: 3,
+      reason: 'target-missing',
+    })
     expect(dead[0].hint).toMatch(/no file named/)
   })
 
   it('classifies .excalidraw as unsupported-asset', () => {
     const r = createLinkResolver(publishedPages)
-    r.resolve({ type: 'wikilink', target: 'diagram.excalidraw', isEmbed: false, line: 5 }, 'notes/test.md')
+    r.resolve(
+      {
+        type: 'wikilink',
+        target: 'diagram.excalidraw',
+        isEmbed: false,
+        line: 5,
+      },
+      'notes/test.md',
+    )
     const dead = r.getDeadLinks()
     expect(dead[0].reason).toBe('unsupported-asset')
     expect(dead[0].hint).toMatch(/not rendered/)
@@ -90,14 +97,21 @@ describe('LinkResolver', () => {
   it('classifies not-published when file exists in vault but outside publishDirs', () => {
     const vaultIndex: VaultFileIndex = {
       unpublishedMd: new Set(['raw/articles/Skill Issue']),
-      unpublishedMdByBasename: new Map([['Skill Issue', ['raw/articles/Skill Issue']]]),
+      unpublishedMdByBasename: new Map([
+        ['Skill Issue', ['raw/articles/Skill Issue']],
+      ]),
       assets: new Set(),
       assetsByBasename: new Map(),
     }
     const r = createLinkResolver(publishedPages, vaultIndex)
     r.resolve(
-      { type: 'wikilink', target: 'raw/articles/Skill Issue.md', isEmbed: false, line: 8 },
-      'notes/test.md'
+      {
+        type: 'wikilink',
+        target: 'raw/articles/Skill Issue.md',
+        isEmbed: false,
+        line: 8,
+      },
+      'notes/test.md',
     )
     const dead = r.getDeadLinks()
     expect(dead[0].reason).toBe('not-published')
@@ -112,7 +126,10 @@ describe('LinkResolver', () => {
       assetsByBasename: new Map(),
     }
     const r = createLinkResolver(publishedPages, vaultIndex)
-    r.resolve({ type: 'wikilink', target: 'note', isEmbed: false, line: 1 }, 'notes/test.md')
+    r.resolve(
+      { type: 'wikilink', target: 'note', isEmbed: false, line: 1 },
+      'notes/test.md',
+    )
     const dead = r.getDeadLinks()
     expect(dead[0].reason).toBe('ambiguous')
   })

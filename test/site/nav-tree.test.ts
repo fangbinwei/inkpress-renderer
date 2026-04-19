@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { buildNavTree } from '../../src/site/nav-tree.js'
+import { describe, expect, it } from 'vitest'
 import { buildBreadcrumb } from '../../src/site/breadcrumb.js'
+import { buildNavTree } from '../../src/site/nav-tree.js'
 
 describe('buildNavTree', () => {
   it('builds tree from flat page paths', () => {
@@ -13,11 +13,23 @@ describe('buildNavTree', () => {
     expect(tree.name).toBe('root')
     expect(tree.children).toHaveLength(2)
     const notes = tree.children.find(c => c.name === 'notes')!
-    expect(notes.children.some(c => c.name === 'Normal' && c.path === 'notes/normal.html')).toBe(true)
+    expect(
+      notes.children.some(
+        c => c.name === 'Normal' && c.path === 'notes/normal.html',
+      ),
+    ).toBe(true)
     const deep = notes.children.find(c => c.name === 'deep')!
-    expect(deep.children.some(c => c.name === 'Nested' && c.path === 'notes/deep/nested.html')).toBe(true)
+    expect(
+      deep.children.some(
+        c => c.name === 'Nested' && c.path === 'notes/deep/nested.html',
+      ),
+    ).toBe(true)
     const guides = tree.children.find(c => c.name === 'guides')!
-    expect(guides.children.some(c => c.name === 'Setup' && c.path === 'guides/setup.html')).toBe(true)
+    expect(
+      guides.children.some(
+        c => c.name === 'Setup' && c.path === 'guides/setup.html',
+      ),
+    ).toBe(true)
   })
 
   it('sorts directories before files, then alphabetically', () => {
@@ -45,8 +57,6 @@ describe('buildBreadcrumb', () => {
 
   it('builds breadcrumb for top-level page', () => {
     const crumbs = buildBreadcrumb('setup.html')
-    expect(crumbs).toEqual([
-      { name: 'setup', path: null },
-    ])
+    expect(crumbs).toEqual([{ name: 'setup', path: null }])
   })
 })

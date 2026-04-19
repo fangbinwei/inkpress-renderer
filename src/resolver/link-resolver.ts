@@ -1,5 +1,5 @@
-import { posix } from 'path'
-import type { RawLink, DeadLinkEntry, DeadLinkReason } from '../types.js'
+import { posix } from 'node:path'
+import type { DeadLinkEntry, DeadLinkReason, RawLink } from '../types.js'
 
 export interface ResolveResult {
   resolved: boolean
@@ -71,7 +71,10 @@ export function createLinkResolver(
     return null
   }
 
-  function classify(target: string, fromSourcePath: string): { reason: DeadLinkReason; hint: string } {
+  function classify(
+    target: string,
+    fromSourcePath: string,
+  ): { reason: DeadLinkReason; hint: string } {
     const ext = posix.extname(target).toLowerCase()
 
     if (UNSUPPORTED_ASSET_EXTS.has(ext)) {
@@ -104,7 +107,8 @@ export function createLinkResolver(
         }
       }
       // Basename match against unpublished md
-      const unpubMatches = vaultIndex.unpublishedMdByBasename.get(basename) || []
+      const unpubMatches =
+        vaultIndex.unpublishedMdByBasename.get(basename) || []
       if (unpubMatches.length === 1) {
         return {
           reason: 'not-published',
@@ -124,7 +128,8 @@ export function createLinkResolver(
           hint: `${target} is an asset file, not a markdown page`,
         }
       }
-      const assetMatches = vaultIndex.assetsByBasename.get(posix.basename(target)) || []
+      const assetMatches =
+        vaultIndex.assetsByBasename.get(posix.basename(target)) || []
       if (assetMatches.length > 0) {
         return {
           reason: 'unsupported-asset',

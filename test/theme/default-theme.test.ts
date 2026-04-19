@@ -1,25 +1,34 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { DefaultTheme } from '../../src/theme/default/theme.js'
-import type { PageContext, IndexContext, NavNode } from '../../src/types.js'
+import type { IndexContext, NavNode, PageContext } from '../../src/types.js'
 
 const testNavTree: NavNode = {
-  name: 'root', path: null, children: [
-    { name: 'notes', path: null, children: [
-      { name: 'My Note', path: 'notes/my-note.html', children: [] },
-    ]},
+  name: 'root',
+  path: null,
+  children: [
+    {
+      name: 'notes',
+      path: null,
+      children: [{ name: 'My Note', path: 'notes/my-note.html', children: [] }],
+    },
   ],
 }
 
 describe('DefaultTheme', () => {
   const theme = new DefaultTheme()
 
-  it('has a name', () => { expect(theme.name).toBe('default') })
+  it('has a name', () => {
+    expect(theme.name).toBe('default')
+  })
 
   it('renders a page with valid HTML structure', () => {
     const ctx: PageContext = {
       title: 'My Note',
       htmlContent: '<p>Hello world</p>',
-      breadcrumb: [{ name: 'notes', path: 'notes/' }, { name: 'My Note', path: null }],
+      breadcrumb: [
+        { name: 'notes', path: 'notes/' },
+        { name: 'My Note', path: null },
+      ],
       navTree: testNavTree,
       currentPath: 'notes/my-note.html',
       siteConfig: { siteName: 'My Site' },
@@ -36,7 +45,10 @@ describe('DefaultTheme', () => {
   })
 
   it('renders an index page', () => {
-    const ctx: IndexContext = { navTree: testNavTree, siteConfig: { siteName: 'My Site' } }
+    const ctx: IndexContext = {
+      navTree: testNavTree,
+      siteConfig: { siteName: 'My Site' },
+    }
     const html = theme.renderIndex(ctx)
     expect(html).toContain('<!DOCTYPE html>')
     expect(html).toContain('My Site')
@@ -53,8 +65,12 @@ describe('DefaultTheme', () => {
 
   it('includes dark mode toggle', () => {
     const ctx: PageContext = {
-      title: 'Test', htmlContent: '<p>content</p>', breadcrumb: [],
-      navTree: testNavTree, currentPath: 'test.html', siteConfig: {},
+      title: 'Test',
+      htmlContent: '<p>content</p>',
+      breadcrumb: [],
+      navTree: testNavTree,
+      currentPath: 'test.html',
+      siteConfig: {},
     }
     const html = theme.renderPage(ctx)
     expect(html).toContain('theme-toggle')
