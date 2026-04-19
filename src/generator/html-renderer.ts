@@ -71,14 +71,15 @@ function extractHeadings(html: string): HeadingMeta[] {
   const headings: HeadingMeta[] = []
   const slugCounts = new Map<string, number>()
   const headingRe = /<h([1-6])>(.*?)<\/h\1>/g
-  let match
-  while ((match = headingRe.exec(html)) !== null) {
+  let match: RegExpExecArray | null = headingRe.exec(html)
+  while (match !== null) {
     const text = match[2].replace(/<[^>]+>/g, '')
     let slug = slugify(text)
     const count = slugCounts.get(slug) || 0
     slugCounts.set(slug, count + 1)
     if (count > 0) slug = `${slug}-${count}`
     headings.push({ level: parseInt(match[1], 10), text, slug })
+    match = headingRe.exec(html)
   }
   return headings
 }
@@ -106,10 +107,11 @@ const CODE_HTML_RE =
 
 async function highlightCodeBlocks(html: string): Promise<string> {
   const matches: { full: string; lang: string; code: string }[] = []
-  let m: RegExpExecArray | null
   CODE_HTML_RE.lastIndex = 0
-  while ((m = CODE_HTML_RE.exec(html)) !== null) {
+  let m: RegExpExecArray | null = CODE_HTML_RE.exec(html)
+  while (m !== null) {
     matches.push({ full: m[0], lang: m[1], code: unescapeHtml(m[2]) })
+    m = CODE_HTML_RE.exec(html)
   }
 
   for (const { full, lang, code } of matches) {

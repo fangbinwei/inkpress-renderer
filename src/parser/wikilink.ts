@@ -30,9 +30,9 @@ export function parseWikilinks(markdown: string): RawLink[] {
     }
   }
 
-  let match: RegExpExecArray | null
   WIKILINK_RE.lastIndex = 0
-  while ((match = WIKILINK_RE.exec(stripped)) !== null) {
+  let match: RegExpExecArray | null = WIKILINK_RE.exec(stripped)
+  while (match !== null) {
     const offset = match.index
     const line =
       lineOffsets.findIndex((start, idx) => {
@@ -46,6 +46,7 @@ export function parseWikilinks(markdown: string): RawLink[] {
       isEmbed: match[1] === '!',
       line,
     })
+    match = WIKILINK_RE.exec(stripped)
   }
 
   return links

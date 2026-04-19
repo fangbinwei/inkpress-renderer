@@ -35,7 +35,7 @@ export async function highlightCode(
   try {
     const highlighter = await getHighlighter()
     const loadedLangs = highlighter.getLoadedLanguages()
-    if (!loadedLangs.includes(lang as any)) {
+    if (!(loadedLangs as readonly string[]).includes(lang)) {
       return `<pre><code class="language-${escapeHtml(lang)}">${escapeHtml(code)}</code></pre>`
     }
     return highlighter.codeToHtml(code, {
