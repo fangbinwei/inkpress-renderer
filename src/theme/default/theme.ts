@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type {
   IndexContext,
   OutputFile,
@@ -8,8 +9,12 @@ import { renderIndexPage } from './index-page.js'
 import { renderPageLayout } from './layout.js'
 import { CSS, JS } from './styles.js'
 
-const CSS_PATH = '_assets/inkpress/style.css'
-const JS_PATH = '_assets/inkpress/script.js'
+function shortHash(content: string): string {
+  return createHash('sha256').update(content).digest('hex').slice(0, 8)
+}
+
+const CSS_PATH = `_assets/inkpress/style.${shortHash(CSS)}.css`
+const JS_PATH = `_assets/inkpress/script.${shortHash(JS)}.js`
 const BASE_URL = ''
 
 export class DefaultTheme implements Theme {
