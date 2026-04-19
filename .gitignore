@@ -3,4 +3,6 @@ dist/
 *.tgz
 .env*
 .e2e-output/
+.preview-output/
+.preview-vault/
 .DS_Store
